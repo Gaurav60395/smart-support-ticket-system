@@ -1,0 +1,15 @@
+# Build and IDE outputs
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.iml
+*.log
+.env
+.env.*
+
+# Documentation & Docker meta files
+README.md
+Dockerfile
+.dockerignore
