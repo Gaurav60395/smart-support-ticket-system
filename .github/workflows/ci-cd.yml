@@ -65,7 +65,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/smart-support-ticket-system
+          images: gaurav9129/smart-support-ticket-system
           tags: |
             type=sha,format=long,prefix=sha-
             type=raw,value=latest
@@ -100,14 +100,14 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # Pull latest image from Docker Hub
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/smart-support-ticket-system:latest
+            docker pull gaurav9129/smart-support-ticket-system:latest
 
             # Stop and remove existing running container if it exists
             docker stop smart-ticket-app || true
             docker rm smart-ticket-app || true
 
             # Run new container on port 8082
-            docker run -d --name smart-ticket-app --restart unless-stopped -p 8082:8082 ${{ secrets.DOCKERHUB_USERNAME }}/smart-support-ticket-system:latest
+            docker run -d --name smart-ticket-app --restart unless-stopped -p 8082:8082 gaurav9129/smart-support-ticket-system:latest
 
             # Clean up old unused images on EC2
             docker image prune -f
