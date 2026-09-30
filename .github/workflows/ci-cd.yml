@@ -92,12 +92,29 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+      - name: Prepare and validate EC2 SSH private key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          if [ -z "$EC2_SSH_KEY" ]; then
+            echo "::error::EC2_SSH_KEY is missing. Add the EC2 instance's private key to repository Actions secrets."
+            exit 1
+          fi
+
+          printf '%s\n' "$EC2_SSH_KEY" | sed 's/\\n/\n/g' | tr -d '\r' > "$RUNNER_TEMP/ec2_ssh_key"
+          chmod 600 "$RUNNER_TEMP/ec2_ssh_key"
+
+          if ! ssh-keygen -y -P "" -f "$RUNNER_TEMP/ec2_ssh_key" >/dev/null 2>&1; then
+            echo "::error::EC2_SSH_KEY must contain the full, unencrypted EC2 private key (not the public key)."
+            exit 1
+          fi
+
       - name: Deploy via SSH to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: ${{ runner.temp }}/ec2_ssh_key
           script: |
             # Pull latest image from Docker Hub
             docker pull gaurav9129/smart-support-ticket-system:latest
