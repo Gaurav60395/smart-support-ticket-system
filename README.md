@@ -71,3 +71,4 @@ GET http://localhost:8082/api/v1/health
 
 ## Future Integrations
 Jira integration, GitHub Copilot Cloud Agent, Atlassian Rovo MCP, and automated PR workflows will be configured at the workflow and repository level for incremental story implementations (starting with story `SST-1`).
+
