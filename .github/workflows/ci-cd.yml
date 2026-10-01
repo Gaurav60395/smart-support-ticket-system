@@ -92,12 +92,38 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
+      - name: Prepare and validate EC2 SSH key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_SSH_PASSPHRASE: ${{ secrets.EC2_SSH_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$EC2_SSH_KEY" ]]; then
+            echo "::error::EC2_SSH_KEY is not configured."
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          key = os.environ["EC2_SSH_KEY"].replace("\\n", "\n").replace("\r", "")
+          Path(".ec2_ssh_key").write_text(key)
+          PY
+          chmod 600 .ec2_ssh_key
+
+          if ! ssh-keygen -y -P "$EC2_SSH_PASSPHRASE" -f .ec2_ssh_key >/dev/null 2>&1; then
+            echo "::error::EC2_SSH_KEY is not a valid SSH private key; verify its contents and optional EC2_SSH_PASSPHRASE secret."
+            exit 1
+          fi
+
       - name: Deploy via SSH to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: .ec2_ssh_key
+          passphrase: ${{ secrets.EC2_SSH_PASSPHRASE }}
           script: |
             # Pull latest image from Docker Hub
             docker pull gaurav9129/smart-support-ticket-system:latest
@@ -111,3 +137,7 @@ jobs:
 
             # Clean up old unused images on EC2
             docker image prune -f
+
+      - name: Remove EC2 SSH key
+        if: always()
+        run: rm -f .ec2_ssh_key

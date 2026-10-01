@@ -53,6 +53,19 @@ The server will start on configured port `8082`.
 
 ---
 
+## AWS EC2 Deployment
+
+The GitHub Actions deployment requires these repository secrets:
+
+- `EC2_HOST`: the EC2 instance's public IP address or DNS name.
+- `EC2_USERNAME`: the SSH user configured on the instance (for example, `ubuntu`).
+- `EC2_SSH_KEY`: the matching SSH private key, stored as its complete contents. Both multiline keys and keys with literal `\n` line breaks are supported.
+- `EC2_SSH_PASSPHRASE`: optional passphrase for an encrypted private key.
+
+The EC2 security group and network ACLs must allow inbound SSH (TCP port 22) from the GitHub Actions runner. The key must match a public key authorized for `EC2_USERNAME`.
+
+---
+
 ## Health Check Endpoint
 Verify that the application is running and accepting HTTP requests:
 
