@@ -99,15 +99,24 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Install Docker if not installed
+            if ! command -v docker &> /dev/null; then
+              sudo apt-get update -y
+              sudo apt-get install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+            fi
+
             # Pull latest image from Docker Hub
-            docker pull gaurav9129/smart-support-ticket-system:latest
+            sudo docker pull gaurav9129/smart-support-ticket-system:latest
 
             # Stop and remove existing running container if it exists
-            docker stop smart-ticket-app || true
-            docker rm smart-ticket-app || true
+            sudo docker stop smart-ticket-app || true
+            sudo docker rm smart-ticket-app || true
 
             # Run new container on port 8082
-            docker run -d --name smart-ticket-app --restart unless-stopped -p 8082:8082 gaurav9129/smart-support-ticket-system:latest
+            sudo docker run -d --name smart-ticket-app --restart unless-stopped -p 8082:8082 gaurav9129/smart-support-ticket-system:latest
 
             # Clean up old unused images on EC2
-            docker image prune -f
+            sudo docker image prune -f
